@@ -3,7 +3,6 @@ QuickBuild is a controller that quickly creates kubernetes deployment resources.
 
 ## Description
 
-
 ## Getting Started
 You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
 **Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
@@ -40,6 +39,48 @@ UnDeploy the controller to the cluster:
 ```sh
 make undeploy
 ```
+
+## Records
+The prototype of QuickBuild CR is as follows:
+```shell
+$ kubectl get qb -A -oyaml                                  
+apiVersion: v1
+items:
+- apiVersion: app.mark8s.io/v1
+  kind: QuickBuild
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"app.mark8s.io/v1","kind":"QuickBuild","metadata":{"annotations":{},"labels":{"app.kubernetes.io/created-by":"quickbuild","app.kubernetes.io/instance":"quickbuild-sample","app.kubernetes.io/managed-by":"kustomize","app.kubernetes.io/name":"quickbuild","app.kubernetes.io/part-of":"quickbuild"},"name":"quickbuild-sample","namespace":"demo"},"spec":{"enableService":true,"image":"registry.cn-shenzhen.aliyuncs.com/solarmesh/httpbin","name":"quick","namespace":"demo","port":80,"replicas":1}}
+    creationTimestamp: "2023-01-10T07:53:30Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/created-by: quickbuild
+      app.kubernetes.io/instance: quickbuild-sample
+      app.kubernetes.io/managed-by: kustomize
+      app.kubernetes.io/name: quickbuild
+      app.kubernetes.io/part-of: quickbuild
+    name: quickbuild-sample
+    namespace: demo
+    resourceVersion: "5048829"
+    uid: f773598d-2a27-4cd1-9f1b-3b9d717f8ef9
+  spec:
+    enableService: true
+    image: registry.cn-shenzhen.aliyuncs.com/solarmesh/httpbin
+    name: quick
+    namespace: demo
+    port: 80
+    replicas: 1
+  status:
+    serviceIp: 10.96.198.161
+    status: AllReady
+kind: List
+metadata:
+  resourceVersion: ""
+```
+
+
+
 
 ## Contributing
 // TODO(user): Add detailed information on how you would like others to contribute to this project
