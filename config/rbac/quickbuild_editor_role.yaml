@@ -1,0 +1,31 @@
+# permissions for end users to edit quickbuilds.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: quickbuild-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: quickbuild
+    app.kubernetes.io/part-of: quickbuild
+    app.kubernetes.io/managed-by: kustomize
+  name: quickbuild-editor-role
+rules:
+- apiGroups:
+  - app.mark8s.io
+  resources:
+  - quickbuilds
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - app.mark8s.io
+  resources:
+  - quickbuilds/status
+  verbs:
+  - get

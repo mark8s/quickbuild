@@ -1,0 +1,17 @@
+apiVersion: app.mark8s.io/v1
+kind: QuickBuild
+metadata:
+  labels:
+    app.kubernetes.io/name: quickbuild
+    app.kubernetes.io/instance: quickbuild-sample
+    app.kubernetes.io/part-of: quickbuild
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: quickbuild
+  name: quickbuild-sample
+spec:
+  name: quick
+  namespace: demo
+  image: registry.cn-shenzhen.aliyuncs.com/solarmesh/httpbin
+  port: 80
+  replicas: 1
+  enableService: true
