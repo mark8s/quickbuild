@@ -24,6 +24,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/yaml"
+	"os"
+	"path/filepath"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -133,7 +135,8 @@ func (r *QuickBuildReconciler) updateQBStatus(ctx context.Context, build *appv1.
 	deploy := &v1.Deployment{}
 	err := r.Get(ctx, types.NamespacedName{Name: build.Spec.Name, Namespace: build.Spec.Namespace}, deploy)
 	if err != nil {
-		panic(err)
+		log.Log.Error(err, "Not Found Deploy: "+deploy.Name+" On Namespace: "+deploy.Namespace)
+		return
 	}
 	// 先简单点判断
 	if deploy.Status.ReadyReplicas == deploy.Status.Replicas {
@@ -145,14 +148,15 @@ func (r *QuickBuildReconciler) updateQBStatus(ctx context.Context, build *appv1.
 	svc := &corev1.Service{}
 	err = r.Get(ctx, types.NamespacedName{Name: build.Spec.Name, Namespace: build.Spec.Namespace}, svc)
 	if err != nil {
-		panic(err)
+		log.Log.Error(err, "Not Found Svc: "+svc.Name+" On Namespace: "+svc.Namespace)
+		return
 	}
 
 	build.Status.ServiceIP = svc.Spec.ClusterIP
 	err = r.Status().Update(ctx, build)
 	if err != nil {
 		log.Log.Error(err, "Update quickbuild: "+build.Name+" on namespace: "+build.Namespace+" error")
-		panic(err)
+		return
 	}
 }
 
@@ -160,7 +164,8 @@ func (r *QuickBuildReconciler) buildService(build *appv1.QuickBuild) *corev1.Ser
 	s := &corev1.Service{}
 	err := yaml.Unmarshal(r.parseTemplate("service", build), s)
 	if err != nil {
-		panic(err)
+		log.Log.Error(err, "Build Service Error")
+		return nil
 	}
 	return s
 }
@@ -169,20 +174,28 @@ func (r *QuickBuildReconciler) buildDeployment(build *appv1.QuickBuild) *v1.Depl
 	d := &v1.Deployment{}
 	err := yaml.Unmarshal(r.parseTemplate("deployment", build), d)
 	if err != nil {
-		panic(err)
+		log.Log.Error(err, "Build Deploy Error")
+		return nil
 	}
 	return d
 }
 
 func (r *QuickBuildReconciler) parseTemplate(templateName string, build *appv1.QuickBuild) []byte {
-	tmpl, err := template.ParseFiles("controllers/template/" + templateName + ".yaml")
+
+	filePrefix, err := filepath.Abs("controllers/template/")
 	if err != nil {
-		panic(err)
+		return nil
+	}
+
+	log.Log.Info(filePrefix)
+	tmpl, err := template.ParseFiles(filePrefix + "/" + templateName + ".yaml")
+	if err != nil {
+		return nil
 	}
 	b := new(bytes.Buffer)
 	err = tmpl.Execute(b, build)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 	return b.Bytes()
 }
@@ -194,4 +207,9 @@ func (r *QuickBuildReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&v1.Deployment{}).
 		Owns(&corev1.Service{}).
 		Complete(r)
+}
+
+func GetRunPath() (string, error) {
+	path, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	return path, err
 }
